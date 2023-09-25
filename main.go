@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
-	bar "github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/lipgloss"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,12 +25,13 @@ type Model struct {
 	choices  []string       // items on the to-do list
 	cursor   int            // which to-do list item our cursor is pointing at
 	selected map[int]string // which to-do items are selected
-	progress bar.Model
+	progress progress.Model
 }
 
 type tickMsg time.Time
 
 func main() {
+	Welcome()
 	model := InitialModel()
 
 	if _, err := tea.NewProgram(model).Run(); err != nil {
@@ -72,10 +72,21 @@ func main() {
 func Welcome() {
 	fmt.Println(`
 ============================================
-	WELCOME TO ZEERO POMODORO !!
+=                                          =
+=       WELCOME TO ZEERO POMODORO !!       =
+=                                          =
+============================================`)
+}
+
+func Goodbye() {
+	fmt.Println("\n\n\n" + `
+============================================
+=                                          =
+=    THANKS FOR USING ZEERO POMODORO !!    =
+=                                          =
 ============================================
 
-Press enter to start
+See you later ~
 	`)
 }
 
@@ -101,7 +112,7 @@ func InitialModel() Model {
 	return Model{
 		choices:  Choices(),
 		selected: make(map[int]string),
-		progress: bar.New(bar.WithDefaultGradient()),
+		progress: progress.New(progress.WithDefaultGradient()),
 	}
 }
 
@@ -131,9 +142,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			m.selected[0] = "aeeee"
-			m.selected[1] = "aeeee123123123"
-			m.selected[2] = "ZZZZZZZZZZZZZZZZZZZ"
 			_, ok := m.selected[m.cursor]
 			if ok {
 				delete(m.selected, m.cursor)
@@ -153,6 +161,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tickMsg:
 		if m.progress.Percent() == 1.0 {
+			Goodbye()
+			Notify("Pomodoro ended", "Your X time is complete")
+			time.Sleep(time.Second * 2)
 			return m, tea.Quit
 		}
 
@@ -192,7 +203,7 @@ func (m Model) View() string {
 		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
 	if ShowProgress {
-		s += m.progress.View() + "\n\n"
+		s += "\n\n" + m.progress.View() + "\n\n"
 	}
 	// The footer
 	s += helpStyle("\nPress q to quit.\n")
